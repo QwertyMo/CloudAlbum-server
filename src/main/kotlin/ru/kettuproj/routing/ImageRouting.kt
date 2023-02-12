@@ -7,8 +7,10 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import ru.kettuproj.database.data.album.AlbumImpl
 import ru.kettuproj.database.data.image.ImageImpl
 import ru.kettuproj.database.data.user.UserImpl
+import ru.kettuproj.model.Album
 import ru.kettuproj.util.ImageUtil
 import ru.kettuproj.util.NetUtil
 import java.io.File
@@ -42,6 +44,22 @@ fun Application.configureImageRouting() {
         authenticate("bearer") {
 
             route("image") {
+                get("album"){
+                    val user = NetUtil.getAuthUser(call) ?: return@get
+                    val id = (NetUtil.getParamOrResponse(call, "albumID") ?: return@get).toInt()
+
+                    if(!AlbumImpl().canUserAccess(user.id, id)) {
+                        call.respond(HttpStatusCode.Unauthorized)
+                        return@get
+                    }
+
+                    val album = AlbumImpl().getAlbum(id)
+                    if(album == null){
+                        call.respond(HttpStatusCode.BadRequest)
+                        return@get
+                    }
+                    call.respond(ImageImpl().albumImages(id))
+                }
                 get("my"){
                     val user = NetUtil.getAuthUser(call) ?: return@get
                     val images = ImageImpl().userImages(user.id)
@@ -49,6 +67,20 @@ fun Application.configureImageRouting() {
                 }
                 post{
                     val user = NetUtil.getAuthUser(call) ?: return@post
+                    var album: Album? = null
+
+                    val albumID = call.request.queryParameters["albumID"]?.toInt()
+                    if(albumID!=null){
+                        album = AlbumImpl().getAlbum(albumID)
+                        if(album == null){
+                            call.respond(HttpStatusCode.BadRequest)
+                            return@post
+                        }
+                        if(!AlbumImpl().canUserUpload(user.id, album.id)){
+                            call.respond(HttpStatusCode.Unauthorized)
+                            return@post
+                        }
+                    }
 
                     val multipartData = try {
                         call.receiveMultipart()
@@ -58,8 +90,7 @@ fun Application.configureImageRouting() {
                     }
 
                     val parts = multipartData.readAllParts()
-
-
+                    
                     if(parts.size != 1){
                         call.respond(HttpStatusCode.BadRequest)
                         return@post
@@ -72,7 +103,8 @@ fun Application.configureImageRouting() {
                     }
 
                     val imageUUID = result[0]
-                    val image = ImageImpl().create(user.id, imageUUID)
+                    val image = if(album!=null) ImageImpl().create(user.id, imageUUID, album.id)
+                    else ImageImpl().create(user.id, imageUUID)
                     if(image==null) {
                         call.respond(HttpStatusCode.InternalServerError)
                         return@post

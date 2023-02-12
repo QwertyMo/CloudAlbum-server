@@ -7,4 +7,6 @@ interface ImageInterface {
     suspend fun userImages(userID: Int): List<Image>
     suspend fun imageByUUID(uuid: String): Image?
     suspend fun deleteImage(uuid: String): Boolean
+    suspend fun create(userID: Int, uuid: String, album: Int): Image?
+    suspend fun albumImages(album: Int): List<Image>
 }

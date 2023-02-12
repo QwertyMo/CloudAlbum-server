@@ -1,9 +1,8 @@
 package ru.kettuproj.database.data.album
 
 
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import ru.kettuproj.database.*
 import ru.kettuproj.model.*
 
@@ -17,11 +16,30 @@ class AlbumImpl : AlbumInterface{
         statement.resultedValues?.singleOrNull()?.let(::albumResult)
     }
 
+    override suspend fun getAlbum(albumID: Int): Album? = DatabaseFactory.dbQuery {
+        ALBUM
+            .select { (ALBUM.ID eq albumID)}
+            .singleOrNull()
+            ?.let(::albumResult)
+    }
+
     override suspend fun getUserAlbums(userID: Int): List<Album> = DatabaseFactory.dbQuery {
         ALBUM
             .leftJoin(ALBUM_USER)
             .select { (ALBUM_USER.USER_ID eq userID) or (ALBUM.CREATOR_ID eq userID) }
             .map(::albumResult)
+    }
+
+    override suspend fun canUserUpload(userID: Int, albumID: Int): Boolean = DatabaseFactory.dbQuery {
+        //TODO: Add role check
+        val data = ALBUM
+            .select{(ALBUM.CREATOR_ID eq userID) and (ALBUM.ID eq albumID)}
+            .singleOrNull()
+        data != null
+    }
+
+    override suspend fun canUserAccess(userID: Int, albumID: Int): Boolean {
+        return albumUsers(albumID).find { it.id == userID } != null
     }
 
     override suspend fun addUserToAlbum(albumID: Int, userID: Int): Boolean = DatabaseFactory.dbQuery {
@@ -52,10 +70,9 @@ class AlbumImpl : AlbumInterface{
     }
 
     override suspend fun addImageToAlbum(albumID: Int, imageID: String): Boolean = DatabaseFactory.dbQuery {
-        ALBUM_IMAGE
-            .insert {
-                it[ALBUM_IMAGE.ALBUM_ID] = albumID
-                it[ALBUM_IMAGE.IMAGE_ID] = imageID
+        IMAGE
+            .update({ IMAGE.ID eq imageID}) {
+                it[IMAGE.ALBUM_ID] = albumID
             }
         true
     }

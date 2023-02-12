@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 import ru.kettuproj.database.DatabaseFactory
 import ru.kettuproj.database.data.album.AlbumImpl
 import ru.kettuproj.database.data.user.UserImpl
+import ru.kettuproj.routing.configureAlbumRouting
 import ru.kettuproj.routing.configureAuthRouting
 import ru.kettuproj.routing.configureImageRouting
 import ru.kettuproj.routing.configureUserRouting
@@ -37,5 +38,6 @@ fun Application.module() {
     configureAuthRouting()
     configureUserRouting()
     configureImageRouting()
+    configureAlbumRouting()
 
 }

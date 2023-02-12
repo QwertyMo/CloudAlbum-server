@@ -37,4 +37,10 @@ object NetUtil {
         }
         return user
     }
+
+    suspend fun getParamOrResponse(call: ApplicationCall, name: String): String?{
+        val param = call.request.queryParameters[name] as String
+        if(param==null) call.respond(HttpStatusCode.BadRequest)
+        return param
+    }
 }

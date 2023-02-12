@@ -30,5 +30,17 @@ fun Application.configureAuthRouting() {
             if(token!=null) call.respond(Token(token))
             else call.respond(HttpStatusCode.Unauthorized)
         }
+        post("/register"){
+            val login = call.request.queryParameters["login"]    as String
+            val pass  = call.request.queryParameters["password"] as String
+
+            val user = UserImpl().create(login, pass)
+            if(user!=null) {
+                val token = UserImpl().login(login, pass)
+                if(token!=null) call.respond(Token(token))
+                else call.respond(HttpStatusCode.InternalServerError)
+            }
+            else call.respond(HttpStatusCode.Unauthorized)
+        }
     }
 }

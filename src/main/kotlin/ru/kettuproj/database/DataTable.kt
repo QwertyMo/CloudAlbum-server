@@ -6,6 +6,7 @@ object IMAGE: Table(){
     val USER_ID = reference("USER_ID", USER.ID)
     val ID = varchar("ID", 255).uniqueIndex()
     val CREATED = long("CREATED")
+    val ALBUM_ID = reference("ALBUM_ID", ALBUM.ID).nullable()
 
     override val primaryKey = PrimaryKey(ID)
 }
@@ -31,11 +32,6 @@ object ALBUM: Table(){
 
     override val primaryKey = PrimaryKey(ID)
 
-}
-
-object ALBUM_IMAGE: Table(){
-    val IMAGE_ID = reference("IMAGE_ID", IMAGE.ID)
-    val ALBUM_ID = reference("ALBUM_ID", ALBUM.ID)
 }
 
 object ATTRIBUTE: Table(){

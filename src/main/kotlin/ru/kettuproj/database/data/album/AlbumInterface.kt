@@ -9,4 +9,7 @@ interface AlbumInterface {
     suspend fun albumUsers(albumID: Int): List<User>
     suspend fun addImageToAlbum(albumID: Int, imageID: String): Boolean
     suspend fun getUserAlbums(userID: Int): List<Album>
+    suspend fun getAlbum(albumID: Int): Album?
+    suspend fun canUserUpload(userID: Int, albumID: Int): Boolean
+    suspend fun canUserAccess(userID: Int, albumID: Int): Boolean
 }
