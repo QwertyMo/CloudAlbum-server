@@ -6,6 +6,9 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import ru.kettuproj.database.data.album.AlbumImpl
+import ru.kettuproj.database.data.invite.InviteImpl
+import ru.kettuproj.database.data.user.UserImpl
+import ru.kettuproj.model.Invite
 import ru.kettuproj.util.NetUtil
 
 fun Application.configureAlbumRouting() {
@@ -44,6 +47,63 @@ fun Application.configureAlbumRouting() {
                 get("my"){
                     val user = NetUtil.getAuthUser(call) ?: return@get
                     call.respond(AlbumImpl().getUserAlbums(user.id))
+                }
+                post("invite") {
+                    val creator = NetUtil.getAuthUser(call) ?: return@post
+                    val userID = (NetUtil.getParamOrResponse(call, "userID") ?: return@post).toInt()
+                    val albumID = (NetUtil.getParamOrResponse(call, "albumID") ?: return@post).toInt()
+
+                    val album = AlbumImpl().getAlbum(albumID)
+                    val user = UserImpl().getUser(userID)
+
+                    if(album == null || user == null){
+                        call.respond(HttpStatusCode.BadRequest)
+                        return@post
+                    }
+
+                    if(!AlbumImpl().canUserInvite(creator.id, album.id)) {
+                        call.respond(HttpStatusCode.Forbidden)
+                        return@post
+                    }
+
+                    if(AlbumImpl().getUserAlbums(user.id).find { it.id == album.id } != null){
+                        call.respond(HttpStatusCode.Conflict)
+                        return@post
+                    }
+
+                    if(InviteImpl().getInvites(user.id).find { it.albumId == album.id } != null){
+                        call.respond(HttpStatusCode.Conflict)
+                        return@post
+                    }
+
+                    val res = InviteImpl().inviteUser(creator.id, user.id, album.id)
+                    if(res==null) call.respond(HttpStatusCode.InternalServerError)
+                    else call.respond(HttpStatusCode.OK)
+                    return@post
+                }
+                get("invite"){
+                    val user = NetUtil.getAuthUser(call) ?: return@get
+                    call.respond(InviteImpl().getInvites(user.id))
+                    return@get
+                }
+                post("accept"){
+                    val user = NetUtil.getAuthUser(call) ?: return@post
+                    val albumID = (NetUtil.getParamOrResponse(call, "albumID") ?: return@post).toInt()
+
+                    val album = AlbumImpl().getAlbum(albumID)
+
+                    if(album == null){
+                        call.respond(HttpStatusCode.BadRequest)
+                        return@post
+                    }
+
+                    if(InviteImpl().getInvites(user.id).find { it.albumId == album.id } == null){
+                        call.respond(HttpStatusCode.Forbidden)
+                        return@post
+                    }
+
+                    InviteImpl().acceptInvite(user.id, album.id)
+                    call.respond(HttpStatusCode.OK)
                 }
             }
         }

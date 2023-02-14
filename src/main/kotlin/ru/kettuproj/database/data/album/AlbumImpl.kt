@@ -30,7 +30,7 @@ class AlbumImpl : AlbumInterface{
             .map(::albumResult)
     }
 
-    override suspend fun canUserUpload(userID: Int, albumID: Int): Boolean = DatabaseFactory.dbQuery {
+    override suspend fun canUserInvite(userID: Int, albumID: Int): Boolean = DatabaseFactory.dbQuery {
         //TODO: Add role check
         val data = ALBUM
             .select{(ALBUM.CREATOR_ID eq userID) and (ALBUM.ID eq albumID)}
@@ -38,6 +38,13 @@ class AlbumImpl : AlbumInterface{
         data != null
     }
 
+    override suspend fun canUserUpload(userID: Int, albumID: Int): Boolean = DatabaseFactory.dbQuery {
+        //TODO: Add role check
+        val data = ALBUM
+            .select{(ALBUM.CREATOR_ID eq userID) and (ALBUM.ID eq albumID)}
+            .singleOrNull()
+        data != null
+    }
     override suspend fun canUserAccess(userID: Int, albumID: Int): Boolean {
         return albumUsers(albumID).find { it.id == userID } != null
     }

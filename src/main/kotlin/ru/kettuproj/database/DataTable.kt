@@ -59,3 +59,9 @@ object ALBUM_USER: Table(){
     val USER_ID = reference("USER_ID", USER.ID)
     val ROLE_ID = reference("ROLE_ID", ROLE.ID).nullable()
 }
+
+object INVITE: Table(){
+    val CREATOR_ID = reference("CREATOR_ID", USER.ID)
+    val USER_ID = reference("USER_ID", USER.ID)
+    val ALBUM_ID = reference("ALBUM_ID", ALBUM.ID)
+}

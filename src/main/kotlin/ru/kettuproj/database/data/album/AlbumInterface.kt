@@ -1,6 +1,7 @@
 package ru.kettuproj.database.data.album
 
 import ru.kettuproj.model.Album
+import ru.kettuproj.model.Invite
 import ru.kettuproj.model.User
 
 interface AlbumInterface {
@@ -12,4 +13,6 @@ interface AlbumInterface {
     suspend fun getAlbum(albumID: Int): Album?
     suspend fun canUserUpload(userID: Int, albumID: Int): Boolean
     suspend fun canUserAccess(userID: Int, albumID: Int): Boolean
+    suspend fun canUserInvite(userID: Int, albumID: Int): Boolean
+
 }
