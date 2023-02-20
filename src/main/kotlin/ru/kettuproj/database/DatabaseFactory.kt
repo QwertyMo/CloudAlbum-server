@@ -17,6 +17,7 @@ object DatabaseFactory {
             SchemaUtils.create(IMAGE)
             SchemaUtils.create(ALBUM)
             SchemaUtils.create(ALBUM_USER)
+            SchemaUtils.create(INVITE)
         }
     }
 

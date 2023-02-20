@@ -35,4 +35,10 @@ class InviteImpl : InviteInterface {
         AlbumImpl().addUserToAlbum(albumID, userID)
     }
 
+    override suspend fun declineInvite(userID: Int, albumID: Int): Boolean = DatabaseFactory.dbQuery {
+        INVITE
+            .deleteWhere{(INVITE.USER_ID eq userID) and (INVITE.ALBUM_ID eq albumID)}
+        true
+    }
+
 }

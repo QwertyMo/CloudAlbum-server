@@ -9,6 +9,7 @@ import ru.kettuproj.database.data.album.AlbumImpl
 import ru.kettuproj.database.data.invite.InviteImpl
 import ru.kettuproj.database.data.user.UserImpl
 import ru.kettuproj.model.Invite
+import ru.kettuproj.util.AlbumUtil
 import ru.kettuproj.util.NetUtil
 
 fun Application.configureAlbumRouting() {
@@ -29,7 +30,7 @@ fun Application.configureAlbumRouting() {
                 }
                 get{
                     val user = NetUtil.getAuthUser(call) ?: return@get
-                    val id  = (NetUtil.getParamOrResponse(call, "id") ?: return@get).toInt()
+                    val id  = (NetUtil.getParamOrResponse(call, "albumID") ?: return@get).toInt()
 
                     if(!AlbumImpl().canUserAccess(user.id, id)) {
                         call.respond(HttpStatusCode.Unauthorized)
@@ -104,6 +105,32 @@ fun Application.configureAlbumRouting() {
 
                     InviteImpl().acceptInvite(user.id, album.id)
                     call.respond(HttpStatusCode.OK)
+                }
+                post("decline"){
+                    val user = NetUtil.getAuthUser(call) ?: return@post
+                    val albumID = (NetUtil.getParamOrResponse(call, "albumID") ?: return@post).toInt()
+
+                    if(InviteImpl().getInvites(user.id).find { it.albumId == albumID } == null){
+                        call.respond(HttpStatusCode.Forbidden)
+                        return@post
+                    }
+
+                    InviteImpl().declineInvite(user.id, albumID)
+                    call.respond(HttpStatusCode.OK)
+                }
+                get("rights"){
+                    val user = NetUtil.getAuthUser(call) ?: return@get
+                    val albumID = (NetUtil.getParamOrResponse(call, "albumID") ?: return@get).toInt()
+
+                    val album = AlbumImpl().getAlbum(albumID)
+
+                    if(album == null){
+                        call.respond(HttpStatusCode.BadRequest)
+                        return@get
+                    }
+
+                    val res = AlbumUtil.getRights(user,album)
+                    call.respond(res)
                 }
             }
         }

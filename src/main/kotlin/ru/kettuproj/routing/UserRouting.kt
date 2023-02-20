@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import ru.kettuproj.database.data.user.UserImpl
 import ru.kettuproj.util.NetUtil
 
 
@@ -21,6 +22,10 @@ fun Application.configureUserRouting() {
                 get("me"){
                     val user = NetUtil.getAuthUser(call) ?: return@get
                     call.respond(user)
+                }
+                get("all"){
+                    val user = NetUtil.getAuthUser(call) ?: return@get
+                    call.respond(UserImpl().allUsers())
                 }
             }
         }
