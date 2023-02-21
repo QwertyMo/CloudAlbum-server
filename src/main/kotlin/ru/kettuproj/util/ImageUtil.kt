@@ -1,23 +1,24 @@
 package ru.kettuproj.util
 
 import io.ktor.http.content.*
-import net.coobird.thumbnailator.Thumbnails
+import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.InputStream
 import java.util.*
 import javax.imageio.ImageIO
+import kotlin.io.path.pathString
+import kotlin.io.path.toPath
 
 
 object ImageUtil {
-    const val systemPath: String = "/photo"
-    const val tempPath: String   = "$systemPath/temp"
-
+    val systemPath: String = "${ImageUtil::class.java.protectionDomain.codeSource.location.toURI().toPath().parent.pathString}/photo"
+    private val logger = LoggerFactory.getLogger(this::class.java)
     fun loadFiles(parts: List<PartData>): List<String>{
-        if(!File(systemPath).exists()) File(systemPath).mkdir()
-        if(!File(tempPath).exists()) File(tempPath).mkdir()
+        if(!File(systemPath).exists()){
+            if(File(systemPath).mkdir()) logger.info("Create photo path")
+            else logger.warn("Can't create photo path")
+        }
         val images = mutableListOf<String>()
         for(part in parts){
             when (part) {
@@ -25,6 +26,7 @@ object ImageUtil {
                     val fileBytes = part.streamProvider().readBytes()
                     val uuid = saveFile(fileBytes)
                     if(uuid!=null) images.add(uuid)
+                    else logger.info("Can't create image")
                 }
                 else -> {
                 }
@@ -42,10 +44,19 @@ object ImageUtil {
 
     private fun saveFile(file: ByteArray): String?{
         val fis = ByteArrayInputStream(file)
-        val bufferedImage: BufferedImage = ImageIO.read(fis) ?: return null
+        val bufferedImage: BufferedImage? = ImageIO.read(fis)
+        if(bufferedImage==null){
+            logger.info("Can't read photo from bytes")
+            return null
+        }
         val uuid = generateUUID()
-        ImageIO.write(bufferedImage, "png", File("$systemPath/$uuid.png"))
-        return uuid
+        return try {
+            ImageIO.write(bufferedImage, "png", File("$systemPath/$uuid.png"))
+            uuid
+        }catch (e: Exception){
+            logger.error("Can't save image: ${e.localizedMessage}")
+            null
+        }
     }
 
     private fun generateUUID(): String{
@@ -64,4 +75,15 @@ object ImageUtil {
     fun deleteImage(uuid: String){
         File("$systemPath/$uuid.png").delete()
     }
+
+    fun scanImageFormats(){
+        ImageIO.scanForPlugins()
+        val names = ImageIO.getReaderFormatNames()
+        var str = ""
+        for (i in names.indices) {
+            str+= "${names[i]} "
+        }
+        logger.info("Supported image formats: $str")
+    }
+
 }

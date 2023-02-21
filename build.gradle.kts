@@ -1,13 +1,17 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
 val exposed_version: String by project
 val h2_version: String by project
+val imageio_version: String by project
 
 plugins {
     kotlin("jvm") version "1.7.22"
     id("io.ktor.plugin") version "2.2.2"
                 id("org.jetbrains.kotlin.plugin.serialization") version "1.7.22"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
 }
 
 group = "ru.kettuproj"
@@ -46,6 +50,22 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 
     implementation("net.coobird:thumbnailator:0.4.19")
-    implementation("com.twelvemonkeys.imageio:imageio-jpeg:3.9.4")
-    implementation("com.twelvemonkeys.imageio:imageio-webp:3.9.4")
+    implementation("com.twelvemonkeys.imageio:imageio-core:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-jpeg:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-bmp:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-hdr:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-icns:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-iff:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-pcx:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-pict:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-pnm:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-sgi:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-tga:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-tiff:$imageio_version")
+    implementation("com.twelvemonkeys.imageio:imageio-xwd:$imageio_version")
+    implementation(files("libs/imageio-webp-3.9.4.jar"))
+}
+
+tasks.withType<ShadowJar> {
+    archiveFileName.set("CloudAlbum.jar")
 }
